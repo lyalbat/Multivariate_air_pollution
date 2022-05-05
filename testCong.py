@@ -12,32 +12,123 @@ from datetime import *
 from functools import reduce
 import numpy as np
 
+#Importing the paths for all the stations and their data
 
-#Importing the paths for Congonhas station
+def pathFinder(station,pol):
+    st = station + '.csv'
+    return  os.path.join(os.path.expanduser('~'),'Documents', 'airPolution','dados',pol, st)
 
-cong_pm = os.path.join(os.path.expanduser('~'),'Documents', 'airPolution','dados','PM10','cong_pm.csv')
-cong_co = os.path.join(os.path.expanduser('~'),'Documents', 'airPolution','dados','CO','cong_co.csv')
-cong_no2 = os.path.join(os.path.expanduser('~'),'Documents', 'airPolution','dados','NO2','cong_no2.csv')
-cong_so2 = os.path.join(os.path.expanduser('~'),'Documents', 'airPolution','dados','SO2','cong_so2.csv')
 
-#Reading the Congonhas files with pandas
+stationsPol = [['camb_pm','centro_pm','cong_pm','ibi_pm','lapa_pm','mooca_pm','pdp_pm','pin_pm','samar_pm','san_pm','smp_pm'],
+ ['ibi_o3','mooca_o3','pdp_o3','pin_o3','smp_o3'],
+ ['centro_co','cong_co','ibi_co','lapa_co','mooca_co','pdp_co','pin_co'],
+ ['centro_no2','cong_no2','ibi_no2','pin_no2'],
+ ['cong_so2','ibi_so2','pdp_so2']]
 
-cong_pm  = pd.read_csv(cong_pm,encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
-cong_co = pd.read_csv(cong_co,encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
-cong_no2 = pd.read_csv(cong_no2,encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
-cong_so2 = pd.read_csv(cong_so2,encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+stationsPath = []
+for combo in range(len(stationsPol)):
+    if(combo == 0):
+        for station in stationsPol[combo]:
+            st = pathFinder(station,'PM10')
+            stationsPath.append(st)
+    elif(combo == 1):
+        for station in stationsPol[combo]:
+            st = pathFinder(station,'O3')
+            stationsPath.append(st)
+    elif(combo == 2):
+        for station in stationsPol[combo]:
+            st = pathFinder(station,'CO')
+            stationsPath.append(st)
+    elif(combo == 3):
+        for station in stationsPol[combo]:
+            st = pathFinder(station,'NO2')
+            stationsPath.append(st)
+    else:
+        for station in stationsPol[combo]:
+            st = pathFinder(station,'SO2')
+            stationsPath.append(st)
+            
+
+#Lendo os arquivos csv - por estacao
+
+#smp 
+smp_pm = pd.read_csv(stationsPath[10],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+smp_o3 = pd.read_csv(stationsPath[15],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+
+#camb
+camb_pm = pd.read_csv(stationsPath[0],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+
+#centro
+centro_pm  = pd.read_csv(stationsPath[1],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+centro_co = pd.read_csv(stationsPath[16],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+centro_no2  = pd.read_csv(stationsPath[23],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#congonhas
+cong_pm  = pd.read_csv(stationsPath[2],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+cong_co = pd.read_csv(stationsPath[17],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+cong_no2 = pd.read_csv(stationsPath[24],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+cong_so2 = pd.read_csv(stationsPath[27],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#ibiripuera
+ibi_pm = pd.read_csv(stationsPath[3],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+ibi_o3 =pd.read_csv(stationsPath[11],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+ibi_co = pd.read_csv(stationsPath[18],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+ibi_no2 = pd.read_csv(stationsPath[25],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+ibi_so2 = pd.read_csv(stationsPath[28],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#lapa 
+lapa_pm = pd.read_csv(stationsPath[4],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+lapa_co = pd.read_csv(stationsPath[19],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#mooca 
+mooca_pm = pd.read_csv(stationsPath[5],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+mooca_o3 = pd.read_csv(stationsPath[12],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+mooca_co = pd.read_csv(stationsPath[20],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#pdp 
+pdp_pm = pd.read_csv(stationsPath[6],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+pdp_o3 = pd.read_csv(stationsPath[13],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+pdp_co = pd.read_csv(stationsPath[21],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+pdp_so2 = pd.read_csv(stationsPath[29],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#pin 
+pin_pm = pd.read_csv(stationsPath[7],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+pin_o3 = pd.read_csv(stationsPath[14],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+pin_co = pd.read_csv(stationsPath[22],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+pin_no2 = pd.read_csv(stationsPath[26],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#samar 
+samar_pm = pd.read_csv(stationsPath[8],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+#san 
+san_pm = pd.read_csv(stationsPath[9],encoding='ISO-8859-1', sep = ',', parse_dates = {'date': ['Data','Hora']}, dayfirst = True)
+
+
+
 
 #Fixing CO
-for co in range(len(cong_co) -1):
-    cong_co['73-CO'][co] = cong_co['73-CO'][co] + ((cong_co['Unnamed: 3'][co])/10)
+coList = [centro_co,cong_co,ibi_co,lapa_co,mooca_co,pdp_co,pin_co]
 
-cong_co = cong_co.drop('Unnamed: 3',axis = 1)
+for coDF in range(0,len(coList)):
+    for co in range(len(coList[coDF])):
+        coList[coDF].iloc[co,1] =  coList[coDF].iloc[co,1] +  (coList[coDF].iloc[co,2]/10)
+    coList[coDF] = coList[coDF].drop('Unnamed: 3',axis = 1)
 
+centro_co = coList[0]
+cong_co = coList[1]
+ibi_co = coList[2]
+lapa_co = coList[3]
+mooca_co = coList[4]
+pdp_co = coList[5]
+pin_co = coList[6]
 
 #Turning multiple dataframes into one
 
- 
-df_temp = [cong_pm, cong_co,cong_no2,cong_so2]
+df_temp = [smp_pm, smp_o3,camb_pm, centro_pm, centro_co,centro_no2,cong_pm, cong_co, cong_no2, cong_so2, ibi_pm, ibi_o3, 
+           ibi_co,ibi_no2, ibi_so2, lapa_pm, lapa_co, mooca_pm, mooca_o3, mooca_co, pdp_pm, pdp_o3, pdp_co, pdp_so2, 
+           pin_pm, pin_o3, pin_co, pin_no2, samar_pm, san_pm]
 
 for df in df_temp:
     df['date'] = pd.to_datetime(df['date'], format="%d/%m/%Y %H:%M")
@@ -121,3 +212,9 @@ for i in stations:
         df = fix_na_1(ts)
         df_col = fix_na_2(df)
         estacoes_t.loc[:,i] = df_col
+
+#Treating the final dataframe for multivariate predictions
+estacoes_t = estacoes_t.dropna(axis = 1, how='all')
+estacoes_t = estacoes_t.drop('index',axis=1)
+
+
