@@ -31,8 +31,8 @@ def as_grid25(dataMatrix, gridsize = 25, nmax = 1000):
             for x in range(sectors[i],sectors[i]+(step-1)):
                 for y in range(sectors[j],sectors[j] + (step -1)):
                     #if there's a sample, cover the sector
-                    if(dataMatrix[x][y] == 1):
-                        coverageMatrix[i][j] = 1
+                    if(dataMatrix[x,y] == 1):
+                        coverageMatrix[i,j] = 1
     return coverageMatrix
 
 def sectorize_coord():
@@ -47,12 +47,15 @@ def sectorize_coord():
     all_stations[300][780] = 1 # X12 - CENTRO
     all_stations[320][680] = 1 # X4 - CAMBUCI
     all_stations[360][720] = 1 # X3 - MOOCA
-
+    
     all_stations = as_grid25(all_stations) # 1
     rows, cols = np.where(all_stations == 1)
     all_stations = np.vstack((rows, cols)).T
+    #Talvez usar: all_stations[np.arange(condicional- all_stations == 1)]
+	#all_stations = all_stations[order(all_stations[,1]),] # 3
+    
     return(all_stations)
-            
+
 
 def map_coords():
     img_path = os.path.join(os.path.expanduser('~'),'Documents','airPolution','spmap.png')
@@ -80,3 +83,7 @@ station_id_coord = np.append(station_coord, station_id, axis = 1)
 #df_cols = np.append(var_name, station_id, axis = 1)
 
 df_cols = np.array(np.meshgrid(station_id,var_name)).T
+
+
+
+
