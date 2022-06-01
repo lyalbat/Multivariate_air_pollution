@@ -48,21 +48,9 @@ def sectorize_coord():
     all_stations[320][680] = 1 # X4 - CAMBUCI
     all_stations[360][720] = 1 # X3 - MOOCA
 
-	# -----------------------------------------------
-	# 1) Get 1000x1000 coords as 25x25 ordered by row (x-axis)
-	# 2) Asserts (x,y) as (n,2) | Note.: which() returns table sorted by col (y-axis)
-	# 3) Sorting back by row to keep consistence  
-"""
-	all_stations = as_grid25(all_stations) # 1
-    #Talvez usar: all_stations[np.arange(condicional- all_stations == 1)]
-	all_stations = which(all_stations == 1, arr.ind=TRUE) # 2
-	all_stations = all_stations[order(all_stations[,1]),] # 3
-	# -----------------------------------------------
-
-	colnames(all_stations) <- c("x","y")
-
-	# Include a last check to confirm if all stations coords are inside the map
-"""
+    all_stations = as_grid25(all_stations) # 1
+    rows, cols = np.where(all_stations == 1)
+    all_stations = np.vstack((rows, cols)).T
     return(all_stations)
             
 
@@ -71,8 +59,24 @@ def map_coords():
     img = cv2.imread(img_path,0);
     spmap = img / 255.0;
     
-    coords = as_grid25(spmap)
-    #(...more to come)
+    coords = as_grid25(spmap).astype(int)
+    coords = np.where((coords==0)|(coords==1), (coords)^1, coords)
+    #print(coords)
     
     return coords
 
+sp_coords = map_coords()
+#No original as coordenadas sao convertidas em um csv...talvez fazer
+#write.csv(sp_coords, "../environment/spcoords_25x25.csv", row.names=FALSE)
+
+station_coord = sectorize_coord()
+
+station_id = [["X1"],["X2"],["X3"],["X4"],["X5"],["X8"],["X12"],["X16"],["X27"],["X47"]]
+
+var_name = [["CO"],["PM10"], ["O3"], ["NO2"], ["SO2"]]
+
+station_id_coord = np.append(station_coord, station_id, axis = 1)
+
+#df_cols = np.append(var_name, station_id, axis = 1)
+
+df_cols = np.array(np.meshgrid(station_id,var_name)).T
