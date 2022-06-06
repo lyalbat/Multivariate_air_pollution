@@ -68,6 +68,22 @@ def map_coords():
     
     return coords
 
+def combination(station_id, var_name):
+    df_cols = np.array(np.meshgrid(station_id,var_name)).T
+    
+    df_cols = np.concatenate((df_cols[0],df_cols[2],df_cols[4],df_cols[7],df_cols[8]),axis=0)
+    
+    df_cols = np.delete(df_cols,np.where(df_cols[:,1] == 'SO2') ,axis=0)
+    df_cols = np.delete(df_cols,np.where(df_cols[:,1] == 'NO2') ,axis=0)
+    df_cols = pd.DataFrame(data = df_cols,columns = ['Var2', 'Var1'])
+    return df_cols
+
+def snapshot_series(station_coords, st_airpol_nafix, var_name, station_id):
+    airpol = st_airpol_nafix
+    
+    
+    return 'cool'
+
 sp_coords = map_coords()
 #No original as coordenadas sao convertidas em um csv...talvez fazer
 #write.csv(sp_coords, "../environment/spcoords_25x25.csv", row.names=FALSE)
@@ -75,14 +91,15 @@ sp_coords = map_coords()
 station_coord = sectorize_coord()
 
 station_id = [["X1"],["X2"],["X3"],["X4"],["X5"],["X8"],["X12"],["X16"],["X27"],["X47"]]
-
 var_name = [["CO"],["PM10"], ["O3"], ["NO2"], ["SO2"]]
 
-station_id_coord = np.append(station_coord, station_id, axis = 1)
+station_id_coord = np.append(station_id,station_coord, axis = 1)
 
-#df_cols = np.append(var_name, station_id, axis = 1)
+df_cols = combination(station_id, var_name)
 
-df_cols = np.array(np.meshgrid(station_id,var_name)).T
+#PREDICTION - FIRST STEP
+CO_PM10_03_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x','y'])
+CO_PM10_03_coords.drop([1,3,5,6,9])
 
 
 
