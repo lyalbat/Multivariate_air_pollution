@@ -17,6 +17,10 @@ import cv2
 import rpy2.robjects as robjects
 import rpy2.robjects.packages as rpackages
 
+#Importando os dados já completos de prediction
+
+from prediction import estacoes_t as airpol
+
 
 def as_grid25(dataMatrix, gridsize = 25, nmax = 1000):
     step = int(nmax/gridsize)
@@ -37,16 +41,15 @@ def as_grid25(dataMatrix, gridsize = 25, nmax = 1000):
 
 def sectorize_coord():
     all_stations = np.zeros((1000,1000));
-    all_stations[210][720] = 1 # X27 - PINHEIROS
-    all_stations[210][850] = 1 # X47 - HORTO FLORESTAL
-    all_stations[230][600] = 1 # X5 - IBIRAPUERA
-    all_stations[230][810] = 1 # X2 - SANTANA
-    all_stations[240][540] = 1 # X8 - CONGONHAS
-    all_stations[250][430] = 1 # X1 - P. D. PEDRO II
-    all_stations[250][480] = 1 # X16 - SANTO AMARO
-    all_stations[300][780] = 1 # X12 - CENTRO
-    all_stations[320][680] = 1 # X4 - CAMBUCI
-    all_stations[360][720] = 1 # X3 - MOOCA
+    all_stations[240][540] = 1 # X73 - CONGONHAS
+    all_stations[300][780] = 1 # X94 - CENTRO
+    all_stations[320][680] = 1 # X90 - CAMBUCI
+    all_stations[230][600] = 1 # X83 - IBIRAPUERA
+    all_stations[360][720] = 1 # X85 - MOOCA
+    all_stations[250][430] = 1 # X72 - P. D. PEDRO II
+    all_stations[210][720] = 1 # X99 - PINHEIROS
+    all_stations[230][810] = 1 # X63 - SANTANA
+    all_stations[250][480] = 1 # X64 - SANTO AMARO
     
     all_stations = as_grid25(all_stations) # 1
     rows, cols = np.where(all_stations == 1)
@@ -79,10 +82,14 @@ def combination(station_id, var_name):
     return df_cols
 
 def snapshot_series(station_coords, st_airpol_nafix, var_name, station_id):
-    airpol = st_airpol_nafix
+    airpol_snap = st_airpol_nafix
     
-    
-    return 'cool'
+'''
+def prediction_series(airpol,var_name,station_coords):
+    for(i in range(len(airpol))):
+        airpol_snapshot = airpol
+    return 'ok'
+'''
 
 sp_coords = map_coords()
 #No original as coordenadas sao convertidas em um csv...talvez fazer
@@ -90,7 +97,7 @@ sp_coords = map_coords()
 
 station_coord = sectorize_coord()
 
-station_id = [["X1"],["X2"],["X3"],["X4"],["X5"],["X8"],["X12"],["X16"],["X27"],["X47"]]
+station_id = [["73-"],["94-"],["90-"],["83-"],["85-"],["72-"],["99-"],["63-"],["64-"]]
 var_name = [["CO"],["PM10"], ["O3"], ["NO2"], ["SO2"]]
 
 station_id_coord = np.append(station_id,station_coord, axis = 1)
@@ -98,9 +105,12 @@ station_id_coord = np.append(station_id,station_coord, axis = 1)
 df_cols = combination(station_id, var_name)
 
 #PREDICTION - FIRST STEP
-CO_PM10_03_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x','y'])
-CO_PM10_03_coords.drop([1,3,5,6,9])
+var_name_CO_PM10_O3 = ["CO", "MP10", "O3"]
+station_id_CO_PM10_03 = ["83-","85-","72-","99-"]
 
+CO_PM10_03_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x','y']).drop([0,1,2,7,8]).reset_index()
+CO_PM10_03_snapshot_series = snapshot_series(CO_PM10_03_coords,airpol,var_name_CO_PM10_O3,station_id_CO_PM10_03)
+CO_PM10_03_reconst = predict_series(CO_PM10_03_snapshot_series,var_name_CO_PM10_O3,sp_coords)
 
 
 
