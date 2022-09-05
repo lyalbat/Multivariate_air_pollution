@@ -20,8 +20,8 @@ import rpy2.robjects as ro
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri
 
-from rpy2.robjects.packages import gstat
-from rpy2.robjects.conversion import localconverter
+#from rpy2.robjects.packages import gstat
+#from rpy2.robjects.conversion import localconverter
 
 #Importando os dados já completos de prediction
 
@@ -89,12 +89,19 @@ def combination(station_id, var_name):
     df_cols = pd.DataFrame(data = df_cols,columns = ['Var2', 'Var1'])
     return df_cols
 
-'''
+
 def snapshot_series(station_coords, st_airpol_nafix, var_name, station_id):
-    airpol_pred = airpol
+    airpol_snap = st_airpol_nafix
+    for row in airpol_snap.columns:
+        if(row == 'date'):
+            pass
+        else:
+            #Separando em station (o codigo) e pol (o poluente)
+            station, pol = row.split('-')
+            #Tem de implementar um for loop aqui
+            
+                
     
-    
-'''
 
 #Alterar o predict
 
