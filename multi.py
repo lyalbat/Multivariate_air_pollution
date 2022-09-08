@@ -91,17 +91,43 @@ def combination(station_id, var_name):
 
 
 def snapshot_series(station_coords, st_airpol_nafix, var_name, station_id):
-    airpol_snap = st_airpol_nafix
-    for row in airpol_snap.columns:
-        if(row == 'date'):
-            pass
+    PM10,CO,O3 = [],[],[]
+    station_id_CO_PM10_03 = ["83","85","72","99"]
+    var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
+    
+    #Ainda nao sei se vai ser util, mas adicionei
+    to_predict = []
+    
+    for row in airpol:
+      station, pol = row.split('-')
+      if(station in station_id_CO_PM10_03 and pol in var_name_CO_PM10_O3):
+        if(pol == "CO"):
+          CO.append(airpol[row])
+        elif(pol == "PM10"):
+          PM10.append(airpol[row])
         else:
-            #Separando em station (o codigo) e pol (o poluente)
-            station, pol = row.split('-')
-            #Tem de implementar um for loop aqui
+          O3.append(airpol[row])
+      else:
+        to_predict.append(airpol.pop(row))
+    
+        PM10,CO,O3 = np.array(PM10),np.array(CO), np.array(O3)
+        new_PM10,new_CO,new_O3 = [], [], []
+        
+        for row2 in range(len(CO[0])):
+          new_CO.append(CO[:,row2])
+        new_CO = np.vstack(new_CO)
+        
+        for row2 in range(len(PM10[0])):
+          new_PM10.append(PM10[:,row2])
+        new_PM10 = np.vstack(new_PM10)
+        
+        for row2 in range(len(O3[0])):
+          new_O3.append(O3[:,row2])
+        new_O3 = np.vstack(new_O3)
+        
+        return snapshot
             
                 
-    
 
 #Alterar o predict
 
@@ -197,6 +223,7 @@ CO_PM10_03_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x',
 CO_PM10_03_coords['coordinates'] = CO_PM10_03_coords.apply(lambda x: [x['x'], x['y']], axis=1)
 airpol_1st_pred = airpol.copy()
 CO,PM10,O3 = [],[],[]
+
 for key in airpol_1st_pred.columns:
     if(key == 'date'):
         pass
