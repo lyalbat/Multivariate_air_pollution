@@ -15,6 +15,7 @@ import numpy as np
 from numpy import asarray
 import cv2
 
+'''
 #Importando pacotes necessarios para conversao R -> Python
 import rpy2
 import rpy2.robjects as robjects
@@ -29,10 +30,11 @@ utils.chooseCRANmirror(ind=1)
 utils.install_packages('gstat')
 gstat = importr('gstat')
 
-from rpy2.robjects import pandas2ri
+#from rpy2.robjects import pandas2ri
 
 #from rpy2.robjects.packages import gstat
 #from rpy2.robjects.conversion import localconverter
+'''
 
 #Importando os dados já completos de prediction
 
@@ -368,6 +370,17 @@ var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
 
 
 CO_PM10_03_snapshot_series = snapshot_series(airpol_1st_pred, station_id_CO_PM10_03,var_name_CO_PM10_O3,CO_PM10_O3_coords)
+
+#Exportando o snapshot do 1st step para o usar no R (teste)
+#CO_PM10_03_snapshot_series.to_csv('CO_PM10_03_snapshot_series.csv')
+
+with open(r'/home/larissa/Documents/airPolution/CO_PM10_03_snapshot_series.txt', 'w') as fp:
+    for dataset in CO_PM10_03_snapshot_series:
+        # write each item on a new line
+        fp.write("%s\n" % dataset)
+    print('Done')
+
+
 #CO_PM10_03_reconst = predict_series(CO_PM10_03_snapshot_series,var_name_CO_PM10_O3,sp_coords)
 
 #print(new_CO)
