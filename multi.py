@@ -16,8 +16,19 @@ from numpy import asarray
 import cv2
 
 #Importando pacotes necessarios para conversao R -> Python
-import rpy2.robjects as ro
-from rpy2.robjects.packages import importr
+import rpy2
+import rpy2.robjects as robjects
+from rpy2.robjects.packages import importr, data
+
+#Loading basic R packages
+utils = importr('utils')
+base = importr('base')
+
+#Loading gstats
+utils.chooseCRANmirror(ind=1)
+utils.install_packages('gstat')
+gstat = importr('gstat')
+
 from rpy2.robjects import pandas2ri
 
 #from rpy2.robjects.packages import gstat
@@ -90,80 +101,44 @@ def combination(station_id, var_name):
     return df_cols
 
 
-def snapshot_series(station_coords, st_airpol_nafix, var_name, station_id):
-    PM10,CO,O3 = [],[],[]
-    station_id_CO_PM10_03 = ["83","85","72","99"]
-    var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
-    
-    #Ainda nao sei se vai ser util, mas adicionei
-    to_predict = []
-    
-    for row in airpol:
-      station, pol = row.split('-')
-      if(station in station_id_CO_PM10_03 and pol in var_name_CO_PM10_O3):
-        if(pol == "CO"):
-          CO.append(airpol[row])
-        elif(pol == "PM10"):
-          PM10.append(airpol[row])
-        else:
-          O3.append(airpol[row])
-      else:
-        to_predict.append(airpol.pop(row))
-    
-        PM10,CO,O3 = np.array(PM10),np.array(CO), np.array(O3)
-        new_PM10,new_CO,new_O3 = [], [], []
-        
-        for row2 in range(len(CO[0])):
-          new_CO.append(CO[:,row2])
-        new_CO = np.vstack(new_CO)
-        
-        for row2 in range(len(PM10[0])):
-          new_PM10.append(PM10[:,row2])
-        new_PM10 = np.vstack(new_PM10)
-        
-        for row2 in range(len(O3[0])):
-          new_O3.append(O3[:,row2])
-        new_O3 = np.vstack(new_O3)
-        
-        return snapshot
-            
-                
-
 #Alterar o predict
 
-def predict_series (snapshot_series, var_names, coords):
+
+'''
+def predict_series (snapshot_series, var_names, city_coords):
     timeserie_map = list()
     matern = None
+    
     for i in range(len(snapshot_series)):
-        airpol_snapshot = snapshot_series[[i]]
+        airpol_snapshot = snapshot_series[i]
         airpol.g = None
         
         if("CO" in var_names):
             airpol.g = gstat(id="CO",
-                             formula = ro.r('''log(unlist(airpol_snapshot$CO)) ~ 1'''),
+                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
                              data = airpol_snapshot,
                              nmax = 10)
             
         if("PM10" in var_names):
             airpol.g = gstat(id="PM10",
-                             formula = ro.r('''log(unlist(airpol_snapshot$CO)) ~ 1'''),
+                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
                              data = airpol_snapshot,
                              nmax = 10)
             
         if("O3" in var_names):
             airpol.g = gstat(id="O3",
-                             formula = ro.r('''log(unlist(airpol_snapshot$CO)) ~ 1'''),
+                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
                              data = airpol_snapshot,
                              nmax = 10)
             
         if("NO2" in var_names):
             airpol.g = gstat(id="NO2",
-                             formula = ro.r('''log(unlist(airpol_snapshot$CO)) ~ 1'''),
+                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
                              data = airpol_snapshot,
                              nmax = 10)
         if("SO2" in var_names):
             airpol.g = gstat(id="SO2",
-                             formula = ro.r('''log(unlist(airpol_snapshot$CO)) ~ 1'''),
+                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
                              data = airpol_snapshot,
                              nmax = 10)
 
@@ -171,18 +146,17 @@ def predict_series (snapshot_series, var_names, coords):
         print(airpol.g)
 
 		#if(is.element("NO2", var_names))
-        matern=ro.r('''vgm(5, "Mat", 3, kappa=0.5)''')
-        airpol.g = ro.r('''gstat(airpol.g, model=matern, fill.all=T)''')
-        v = ro.r('''variogram(airpol.g,50)''')
-        ro.r('''airpol.fit <- fit.lmc(v, airpol.g, model=matern, 
+        matern=ro.r(vgm(5, "Mat", 3, kappa=0.5))
+        airpol.g = ro.r(gstat(airpol.g, model=matern, fill.all=T))
+        v = ro.r(variogram(airpol.g,50))
+        ro.r(airpol.fit <- fit.lmc(v, airpol.g, model=matern, 
 						  fit.ranges=FALSE, 
 						  correct.diagonal=1.01)
 
 		plot(v, model=airpol.fit)
-        ''')
+        )
 
 		# Running reconstruction and storing output at "info"
-        '''
 		info = capture.output(
 			timestamp_map_rebuilt = predict(airpol.fit, newdata = coords)
 		)
@@ -196,10 +170,10 @@ def predict_series (snapshot_series, var_names, coords):
 		# Progress
 		progress = ceiling(100*i/length(snapshot_series))
 		cat('\r',format(paste0(ic, " ", method, ": ", progress, "% ")))
-		flush.console()'''
+		flush.console()
         print("\nDone!")
         return(timeserie_map)
-
+'''
 
 sp_coords = map_coords()
 #No original as coordenadas sao convertidas em um csv...talvez fazer
@@ -215,20 +189,14 @@ station_id_coord = np.append(station_id,station_coord, axis = 1)
 
 df_cols = combination(station_id, var_name)
 
-#PREDICTION - FIRST STEP
-var_name_CO_PM10_O3 = ["CO", "MP10", "O3"]
-station_id_CO_PM10_03 = ["83-","85-","72-","99-"]
 
-CO_PM10_03_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x','y']).drop([0,1,2,7,8]).reset_index()
-CO_PM10_03_coords['coordinates'] = CO_PM10_03_coords.apply(lambda x: [x['x'], x['y']], axis=1)
-airpol_1st_pred = airpol.copy()
-CO,PM10,O3 = [],[],[]
+'''CO,PM10,O3 = [],[],[]
 
 for key in airpol_1st_pred.columns:
     if(key == 'date'):
         pass
     else:
-        if(key[:3] in station_id_CO_PM10_03):
+        if(key[:3] in station_id_CO_PM10_O3):
             if(key[3:] == "CO"):
                 #coords = CO_PM10_03_coords[CO_PM10_03_coords['station_id']==key[:3]]['coordinates'].values[0]
                 CO.append(airpol_1st_pred[key])
@@ -243,10 +211,164 @@ for key in airpol_1st_pred.columns:
         else:
             airpol_1st_pred = airpol_1st_pred.drop(columns=[key])
             
-dic_test= {'Coordinates':CO_PM10_03_coords['coordinates'],'CO': CO, 'PM10': PM10, 'O3': O3}
+dic_test= {'Coordinates':CO_PM10_O3_coords['coordinates'],'CO': CO, 'PM10': PM10, 'O3': O3}
 dic_test = pd.DataFrame(dic_test)
+'''
 
-#CO_PM10_03_snapshot_series = snapshot_series(CO_PM10_03_coords,airpol,var_name_CO_PM10_O3,station_id_CO_PM10_03)
+#Deve ser modularizado como uma funcao snapshot:
+
+def snapshot_series(airpol, station_ids,var_names,station_coords,snapshot_prev=None):
+    if(var_names[-1] == 'O3'):
+        PM10,CO,O3 = [],[],[]
+        station_id_CO_PM10_03 = station_ids
+        var_name_CO_PM10_O3 = var_names
+        
+        #Ainda nao sei se vai ser util, mas adicionei
+        to_predict = []
+        
+        for row in airpol:
+          station, pol = row.split('-')
+          if(station in station_id_CO_PM10_03 and pol in var_name_CO_PM10_O3):
+            if(pol == "CO"):
+              CO.append(airpol[row])
+            elif(pol == "PM10"):
+              PM10.append(airpol[row])
+            else:
+              O3.append(airpol[row])
+          else:
+            to_predict.append(airpol.pop(row))
+        
+        PM10,CO,O3 = np.array(PM10),np.array(CO), np.array(O3)
+        new_PM10,new_CO,new_O3 = [], [], []
+        
+        #Possivel usar len(CO[0]), porque todos tem mesmo comprimento
+        #Formatacao - cada array é um timestamp, cada coluna uma estacao
+        
+        for row2 in range(len(CO[0])):
+          new_CO.append(CO[:,row2])
+          new_O3.append(O3[:,row2])
+          new_PM10.append(PM10[:,row2])
+        
+        new_CO, new_PM10, new_O3 = np.vstack(new_CO), np.vstack(new_PM10), np.vstack(new_O3)
+        
+        snapshot = []
+        CO_PM10_O3_coords = station_coords
+        
+        for timestamp in range(len(new_CO)):
+            aux  = CO_PM10_O3_coords.copy()
+            aux['CO'] = new_CO[timestamp].tolist()
+            aux['PM10'] = new_PM10[timestamp].tolist()
+            aux['O3'] = new_O3[timestamp].tolist()
+            snapshot.append(aux)
+    #A partir daqui tem que adaptar:
+            
+    elif(var_names[-1] == 'NO2'):
+        #Precisa arrumar ainda - o snapshot_prev serve para reduzir tempo de processamento
+        PM10,CO,O3 = [],[],[]
+        station_id_CO_PM10_03 = station_ids
+        var_name_CO_PM10_O3 = var_names
+        
+        #Ainda nao sei se vai ser util, mas adicionei
+        to_predict = []
+        
+        for row in airpol:
+          station, pol = row.split('-')
+          if(station in station_id_CO_PM10_03 and pol in var_name_CO_PM10_O3):
+            if(pol == "CO"):
+              CO.append(airpol[row])
+            elif(pol == "PM10"):
+              PM10.append(airpol[row])
+            else:
+              O3.append(airpol[row])
+          else:
+            to_predict.append(airpol.pop(row))
+        
+        PM10,CO,O3 = np.array(PM10),np.array(CO), np.array(O3)
+        new_PM10,new_CO,new_O3 = [], [], []
+        
+        #Possivel usar len(CO[0]), porque todos tem mesmo comprimento
+        #Formatacao - cada array é um timestamp, cada coluna uma estacao
+        
+        for row2 in range(len(CO[0])):
+          new_CO.append(CO[:,row2])
+          new_O3.append(O3[:,row2])
+          new_PM10.append(PM10[:,row2])
+        
+        new_CO, new_PM10, new_O3 = np.vstack(new_CO), np.vstack(new_PM10), np.vstack(new_O3)
+        
+        snapshot = []
+        CO_PM10_O3_coords = station_coords
+        
+        for timestamp in range(len(new_CO)):
+            aux  = CO_PM10_O3_coords.copy()
+            aux['CO'] = new_CO[timestamp].tolist()
+            aux['PM10'] = new_PM10[timestamp].tolist()
+            aux['O3'] = new_O3[timestamp].tolist()
+            snapshot.append(aux)
+    elif(var_names[-1] == 'SO2'):
+        #Precisa arrumar ainda - o snapshot_prev serve para reduzir tempo de processamento
+        PM10,CO,O3 = [],[],[]
+        station_id_CO_PM10_03 = station_ids
+        var_name_CO_PM10_O3 = var_names
+        
+        #Ainda nao sei se vai ser util, mas adicionei
+        to_predict = []
+        
+        for row in airpol:
+          station, pol = row.split('-')
+          if(station in station_id_CO_PM10_03 and pol in var_name_CO_PM10_O3):
+            if(pol == "CO"):
+              CO.append(airpol[row])
+            elif(pol == "PM10"):
+              PM10.append(airpol[row])
+            else:
+              O3.append(airpol[row])
+          else:
+            to_predict.append(airpol.pop(row))
+        
+        PM10,CO,O3 = np.array(PM10),np.array(CO), np.array(O3)
+        new_PM10,new_CO,new_O3 = [], [], []
+        
+        #Possivel usar len(CO[0]), porque todos tem mesmo comprimento
+        #Formatacao - cada array é um timestamp, cada coluna uma estacao
+        
+        for row2 in range(len(CO[0])):
+          new_CO.append(CO[:,row2])
+          new_O3.append(O3[:,row2])
+          new_PM10.append(PM10[:,row2])
+        
+        new_CO, new_PM10, new_O3 = np.vstack(new_CO), np.vstack(new_PM10), np.vstack(new_O3)
+        
+        snapshot = []
+        CO_PM10_O3_coords = station_coords
+        
+        for timestamp in range(len(new_CO)):
+            aux  = CO_PM10_O3_coords.copy()
+            aux['CO'] = new_CO[timestamp].tolist()
+            aux['PM10'] = new_PM10[timestamp].tolist()
+            aux['O3'] = new_O3[timestamp].tolist()
+            snapshot.append(aux)
+    else:
+        pass
+    
+    return snapshot
+
+#PREDICTION - FIRST STEP
+var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
+station_id_CO_PM10_O3 = ["83-","85-","72-","99-"]
+
+CO_PM10_O3_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x','y']).drop([0,1,2,7,8]).reset_index()
+CO_PM10_O3_coords['coordinates'] = CO_PM10_O3_coords.apply(lambda x: [x['x'], x['y']], axis=1)
+airpol_1st_pred = airpol.copy()
+
+airpol_1st_pred = airpol_1st_pred.set_index('date')
+CO_PM10_O3_coords = CO_PM10_O3_coords.drop(['index','x','y'],axis=1)
+station_id_CO_PM10_03 = ["83","85","72","99"]
+var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
+
+
+CO_PM10_03_snapshot_series = snapshot_series(airpol_1st_pred, station_id_CO_PM10_03,var_name_CO_PM10_O3,CO_PM10_O3_coords)
 #CO_PM10_03_reconst = predict_series(CO_PM10_03_snapshot_series,var_name_CO_PM10_O3,sp_coords)
 
+#print(new_CO)
 
