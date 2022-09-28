@@ -15,6 +15,10 @@ import numpy as np
 from numpy import asarray
 import cv2
 
+
+import subprocess
+from os.path import abspath
+
 '''
 #Importando pacotes necessarios para conversao R -> Python
 import rpy2
@@ -60,6 +64,7 @@ def as_grid25(dataMatrix, gridsize = 25, nmax = 1000):
                         coverageMatrix[i,j] = 1
     return coverageMatrix
 
+
 def sectorize_coord():
     all_stations = np.zeros((1000,1000));
     all_stations[240][540] = 1 # X73 - CONGONHAS
@@ -103,80 +108,6 @@ def combination(station_id, var_name):
     return df_cols
 
 
-#Alterar o predict
-
-
-'''
-def predict_series (snapshot_series, var_names, city_coords):
-    timeserie_map = list()
-    matern = None
-    
-    for i in range(len(snapshot_series)):
-        airpol_snapshot = snapshot_series[i]
-        airpol.g = None
-        
-        if("CO" in var_names):
-            airpol.g = gstat(id="CO",
-                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
-                             data = airpol_snapshot,
-                             nmax = 10)
-            
-        if("PM10" in var_names):
-            airpol.g = gstat(id="PM10",
-                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
-                             data = airpol_snapshot,
-                             nmax = 10)
-            
-        if("O3" in var_names):
-            airpol.g = gstat(id="O3",
-                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
-                             data = airpol_snapshot,
-                             nmax = 10)
-            
-        if("NO2" in var_names):
-            airpol.g = gstat(id="NO2",
-                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
-                             data = airpol_snapshot,
-                             nmax = 10)
-        if("SO2" in var_names):
-            airpol.g = gstat(id="SO2",
-                             formula = ro.r(log(unlist(airpol_snapshot$CO)) ~ 1),
-                             data = airpol_snapshot,
-                             nmax = 10)
-
-		#matern=vgm(0.1, "Mat", 3, kappa=0.5)
-        print(airpol.g)
-
-		#if(is.element("NO2", var_names))
-        matern=ro.r(vgm(5, "Mat", 3, kappa=0.5))
-        airpol.g = ro.r(gstat(airpol.g, model=matern, fill.all=T))
-        v = ro.r(variogram(airpol.g,50))
-        ro.r(airpol.fit <- fit.lmc(v, airpol.g, model=matern, 
-						  fit.ranges=FALSE, 
-						  correct.diagonal=1.01)
-
-		plot(v, model=airpol.fit)
-        )
-
-		# Running reconstruction and storing output at "info"
-		info = capture.output(
-			timestamp_map_rebuilt = predict(airpol.fit, newdata = coords)
-		)
-
-		timeserie_map[[i]] <- timestamp_map_rebuilt 
-
-		# Formatting console output
-		ic <- info[1] # string log for Intrinsic Correlation
-		method <- substr(info[2], 8, 25) # string log formatted for cokriging
-
-		# Progress
-		progress = ceiling(100*i/length(snapshot_series))
-		cat('\r',format(paste0(ic, " ", method, ": ", progress, "% ")))
-		flush.console()
-        print("\nDone!")
-        return(timeserie_map)
-'''
-
 sp_coords = map_coords()
 #No original as coordenadas sao convertidas em um csv...talvez fazer
 #write.csv(sp_coords, "../environment/spcoords_25x25.csv", row.names=FALSE)
@@ -184,38 +115,13 @@ sp_coords = map_coords()
 station_coord = sectorize_coord()
 #tation_coord['coordinates'] = df[['Year', 'quarter', ...]].agg('-'.join, axis=1)
 
-station_id = [["73-"],["94-"],["90-"],["83-"],["85-"],["72-"],["99-"],["63-"],["64-"]]
+station_id = [["73"],["94"],["90-"],["83"],["85"],["72"],["99"],["63"],["64"]]
 var_name = [["CO"],["PM10"], ["O3"], ["NO2"], ["SO2"]]
 
 station_id_coord = np.append(station_id,station_coord, axis = 1)
 
 df_cols = combination(station_id, var_name)
 
-
-'''CO,PM10,O3 = [],[],[]
-
-for key in airpol_1st_pred.columns:
-    if(key == 'date'):
-        pass
-    else:
-        if(key[:3] in station_id_CO_PM10_O3):
-            if(key[3:] == "CO"):
-                #coords = CO_PM10_03_coords[CO_PM10_03_coords['station_id']==key[:3]]['coordinates'].values[0]
-                CO.append(airpol_1st_pred[key])
-            elif(key[3:] == "PM10"):
-                #coords = CO_PM10_03_coords[CO_PM10_03_coords['station_id']==key[:3]]['coordinates'].values[0]
-                PM10.append(airpol_1st_pred[key])
-            elif(key[3:] == "O3"):
-                #coords = CO_PM10_03_coords[CO_PM10_03_coords['station_id']==key[:3]]['coordinates'].values[0]
-                O3.append(airpol_1st_pred[key])
-            else:
-                pass
-        else:
-            airpol_1st_pred = airpol_1st_pred.drop(columns=[key])
-            
-dic_test= {'Coordinates':CO_PM10_O3_coords['coordinates'],'CO': CO, 'PM10': PM10, 'O3': O3}
-dic_test = pd.DataFrame(dic_test)
-'''
 
 #Deve ser modularizado como uma funcao snapshot:
 
@@ -357,14 +263,15 @@ def snapshot_series(airpol, station_ids,var_names,station_coords,snapshot_prev=N
 
 #PREDICTION - FIRST STEP
 var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
-station_id_CO_PM10_O3 = ["83-","85-","72-","99-"]
+station_id_CO_PM10_O3 = ["83","85","72","99"]
 
 CO_PM10_O3_coords = pd.DataFrame(station_id_coord, columns = ['station_id', 'x','y']).drop([0,1,2,7,8]).reset_index()
-CO_PM10_O3_coords['coordinates'] = CO_PM10_O3_coords.apply(lambda x: [x['x'], x['y']], axis=1)
+#CO_PM10_O3_coords['coordinates'] = CO_PM10_O3_coords.apply(lambda x: [x['x'], x['y']], axis=1)
 airpol_1st_pred = airpol.copy()
 
 airpol_1st_pred = airpol_1st_pred.set_index('date')
-CO_PM10_O3_coords = CO_PM10_O3_coords.drop(['index','x','y'],axis=1)
+CO_PM10_O3_coords = CO_PM10_O3_coords.drop('index',axis=1)
+#CO_PM10_O3_coords = CO_PM10_O3_coords.drop(['index','x','y'],axis=1)
 station_id_CO_PM10_03 = ["83","85","72","99"]
 var_name_CO_PM10_O3 = ["CO", "PM10", "O3"]
 
@@ -374,14 +281,27 @@ CO_PM10_03_snapshot_series = snapshot_series(airpol_1st_pred, station_id_CO_PM10
 #Exportando o snapshot do 1st step para o usar no R (teste)
 #CO_PM10_03_snapshot_series.to_csv('CO_PM10_03_snapshot_series.csv')
 
-with open(r'/home/larissa/Documents/airPolution/CO_PM10_03_snapshot_series.txt', 'w') as fp:
-    for dataset in CO_PM10_03_snapshot_series:
-        # write each item on a new line
-        fp.write("%s\n" % dataset)
-    print('Done')
+def callingR(snapshots):
+  for elemIndex in range(len(snapshots)):
+      path = "dataframes_snapshots/snapshot_series_" + str(elemIndex + 1)  + ".csv"
+      absPath = abspath(path)
+      df = snapshots[elemIndex]
+      
+      #Criação de arquivo csv síncrona
+      df.to_csv(absPath)
+      
+  return len(snapshots)
+
+def predict_series():
+    
+    rPath = abspath("listR_teste.R")
+    command = "Rscript " + rPath
+    subprocess.call(command, shell=True)
+
+print("Numero de dataframes observados: ", callingR(CO_PM10_03_snapshot_series))
+
 
 
 #CO_PM10_03_reconst = predict_series(CO_PM10_03_snapshot_series,var_name_CO_PM10_O3,sp_coords)
 
 #print(new_CO)
-
