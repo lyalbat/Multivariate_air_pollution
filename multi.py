@@ -67,15 +67,15 @@ def as_grid25(dataMatrix, gridsize = 25, nmax = 1000):
 
 def sectorize_coord():
     all_stations = np.zeros((1000,1000));
-    all_stations[240][540] = 1 # X73 - CONGONHAS
-    all_stations[300][780] = 1 # X94 - CENTRO
-    all_stations[320][680] = 1 # X90 - CAMBUCI
-    all_stations[230][600] = 1 # X83 - IBIRAPUERA
-    all_stations[360][720] = 1 # X85 - MOOCA
-    all_stations[250][430] = 1 # X72 - P. D. PEDRO II
-    all_stations[210][720] = 1 # X99 - PINHEIROS
-    all_stations[230][810] = 1 # X63 - SANTANA
-    all_stations[250][480] = 1 # X64 - SANTO AMARO
+    all_stations[240][540] = 1 # X73 (meu) : X8 - CONGONHAS
+    all_stations[300][780] = 1 # X94 (meu) : X12 - CENTRO
+    all_stations[320][680] = 1 # X90 (meu) : X4 - CAMBUCI
+    all_stations[230][600] = 1 # X83 (meu) : X5 - IBIRAPUERA
+    all_stations[360][720] = 1 # X85 (meu) : X3 - MOOCA
+    all_stations[250][430] = 1 # X72 (meu) : X1 - P. D. PEDRO II
+    all_stations[210][720] = 1 # X99 (meu) : X27 - PINHEIROS
+    all_stations[230][810] = 1 # X63 (meu) : X2 - SANTANA
+    all_stations[250][480] = 1 # X64 (meu) : X16 - SANTO AMARO
     
     all_stations = as_grid25(all_stations) # 1
     rows, cols = np.where(all_stations == 1)
@@ -115,7 +115,7 @@ sp_coords = map_coords()
 station_coord = sectorize_coord()
 #tation_coord['coordinates'] = df[['Year', 'quarter', ...]].agg('-'.join, axis=1)
 
-station_id = [["73"],["94"],["90-"],["83"],["85"],["72"],["99"],["63"],["64"]]
+station_id = [["73"],["94"],["90"],["83"],["85"],["72"],["99"],["63"],["64"]]
 var_name = [["CO"],["PM10"], ["O3"], ["NO2"], ["SO2"]]
 
 station_id_coord = np.append(station_id,station_coord, axis = 1)
@@ -289,6 +289,7 @@ def callingR(snapshots):
       
       #Criação de arquivo csv síncrona
       df.to_csv(absPath)
+      print(df)
       
   return len(snapshots)
 
@@ -299,7 +300,6 @@ def predict_series():
     subprocess.call(command, shell=True)
 
 print("Numero de dataframes observados: ", callingR(CO_PM10_03_snapshot_series))
-
 
 
 #CO_PM10_03_reconst = predict_series(CO_PM10_03_snapshot_series,var_name_CO_PM10_O3,sp_coords)
